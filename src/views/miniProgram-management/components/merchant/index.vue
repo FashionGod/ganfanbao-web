@@ -1,5 +1,6 @@
 <template>
-  <a-table
+  <div>
+    <a-table
     :columns="columns"
     :data-source="data"
     :pagination="pagination"
@@ -12,18 +13,127 @@
         v-for="tag in tags"
         :key="tag"
         :color="
-          tag === 'loser' ? 'volcano' : tag.length > 5 ? 'geekblue' : 'green'
+          tag === '未审核' ? 'volcano' : 'green'
         "
       >
         {{ tag.toUpperCase() }}
       </a-tag>
     </span>
-    <span slot="action">
-      <a>查看详情</a>
+    <span slot="action" slot-scope="text, record">
+      <a @click="showDrawer(record)">查看详情</a>
       <a-divider type="vertical" />
-      <a>通过</a>
+        <a-popconfirm
+          title="你确定改变审核状态？"
+          ok-text="确认"
+          cancel-text="取消"
+          @confirm="confirm(record)"
+          @cancel="cancel"
+        >
+        <a>更改状态</a>
+        </a-popconfirm>
     </span>
-  </a-table>
+    </a-table>
+    <a-drawer
+        title="详情信息"
+        :width="900"
+        placement="right"
+        :closable="false"
+        :visible="visible"
+        :after-visible-change="afterVisibleChange"
+        @close="onClose"
+      >
+          <a-descriptions :title="drawerData?drawerData.cardInfo.shopName:''" bordered>
+          <a-descriptions-item label="法人姓名">
+            {{drawerData?drawerData.merchantSignUpInfo.name:''}}
+          </a-descriptions-item>
+          <a-descriptions-item label="手机号">
+            {{drawerData?drawerData._id:''}}
+          </a-descriptions-item>
+          <a-descriptions-item label="身份证号">
+            {{drawerData?drawerData.merchantSignUpInfo.IDNumber:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="店铺名称">
+            {{drawerData?drawerData.cardInfo.shopName:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="单位名称">
+            {{drawerData?drawerData.merchantSignUpInfo.companyName:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="经营地址">
+            {{drawerData?drawerData.merchantSignUpInfo.managementAddress:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="经营范围">
+            {{drawerData?drawerData.merchantSignUpInfo.managementArrange:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="有效期至">
+            {{drawerData?drawerData.merchantSignUpInfo.deadline:""}}
+          </a-descriptions-item>
+          <a-descriptions-item label="店铺logo">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.merchantLogo:''" alt="店铺logo" width="200px" height="200px">
+              </template>
+            <img :src="drawerData?imgTransObj.merchantLogo:''" alt="店铺logo" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="手持身份证正面">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.IdAndPerson:''" alt="手持身份证正面" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.IdAndPerson:''" alt="手持身份证正面" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="手持身份证反面">
+            <a-popover>
+              <template slot="content">
+               <img :src="drawerData?imgTransObj.IdReverse:''" alt="手持身份证反面" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.IdReverse:''" alt="手持身份证反面" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="身份证正面">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.IdFront:''" alt="身份证正面" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.IdFront:''" alt="身份证正面" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="营业执照">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.businessLicense:''" alt="营业执照" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.businessLicense:''" alt="营业执照" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="食品许可">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.foodLicense:''" alt="食品许可" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.foodLicense:''" alt="食品许可" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="商家门面">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.merchantDoor:''" alt="商家门面" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.merchantDoor:''" alt="商家门面" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+          <a-descriptions-item label="店内环境">
+            <a-popover>
+              <template slot="content">
+                <img :src="drawerData?imgTransObj.merchantEnvironment:''" alt="店内环境" width="500px" height="500px">
+              </template>
+              <img :src="drawerData?imgTransObj.merchantEnvironment:''" alt="店内环境" width="120px" height="120px">
+            </a-popover>
+          </a-descriptions-item>
+        </a-descriptions>
+      </a-drawer>
+  </div>
 </template>
 <script>
 const columns = [
@@ -42,12 +152,6 @@ const columns = [
     title: "审核状态",
     key: "tags",
     dataIndex: "tags",
-    filters: [
-      { text: '未审核', value: '0' },
-      { text: '审核通过', value: '1' },
-    ],
-    filterMultiple: false,
-    scopedSlots: { customRender: "tags" },
   },
   {
     title: "操作",
@@ -56,165 +160,124 @@ const columns = [
   },
 ];
 
-const data = [
-  {
-    key: "1",
-    name: "必胜客",
-    phone: "15541155173",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    phone: "15541155111",
-    tags: ["loser"],
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    phone: "15541155112",
-    tags: ["cool", "teacher"],
-  },
-  {
-    key: "4",
-    name: "必胜客",
-    phone: "15541155173",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "5",
-    name: "Jim Green",
-    phone: "15541155111",
-    tags: ["loser"],
-  },
-  {
-    key: "6",
-    name: "Joe Black",
-    phone: "15541155112",
-    tags: ["cool", "teacher"],
-  },
-  {
-    key: "7",
-    name: "必胜客",
-    phone: "15541155173",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "8",
-    name: "Jim Green",
-    phone: "15541155111",
-    tags: ["loser"],
-  },
-  {
-    key: "9",
-    name: "Joe Black",
-    phone: "15541155112",
-    tags: ["cool", "teacher"],
-  },
-  {
-    key: "10",
-    name: "必胜客",
-    phone: "15541155173",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "11",
-    name: "Jim Green",
-    phone: "15541155111",
-    tags: ["loser"],
-  },
-  {
-    key: "12",
-    name: "Joe Black",
-    phone: "15541155112",
-    tags: ["cool", "teacher"],
-  },
-  {
-    key: "13",
-    name: "必胜客",
-    phone: "15541155173",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "14",
-    name: "Jim Green",
-    phone: "15541155111",
-    tags: ["loser"],
-  },
-  {
-    key: "15",
-    name: "Joe Black",
-    phone: "15541155112",
-    tags: ["cool", "teacher"],
-  },
-];
+const data = [];
 
 import { PersonManageModel } from "../../../../models/personManage";
 const personManageModel = new PersonManageModel();
 export default {
   data() {
     return {
+      visible: false,
       data,
       columns,
       pagination: {},
       loading: false,
+      drawerData: null,
+      imgTransObj: null,
     };
   },
   mounted() {
     this.fetch();
   },
   methods: {
-  handleTableChange(pagination, filters={tags: []}) {
-      console.log('pagination');
-      console.log(pagination);
-      console.log(filters);
+    afterVisibleChange(val) {
+      console.log('visible', val);
+    },
+    showDrawer(record) {
+      console.log(record.orginalObj)
+      this.visible = true;
+      this.drawerData = record.orginalObj;
+      this.imgTransObj = {...record.orginalObj.merchantSignUpImages};
+      for (let obj in this.imgTransObj) {
+        if (obj == 'merchantEnvironment') {
+          for (let i of this.imgTransObj[obj]) {
+            let tmpUrl = 'https://'
+            let tmpStr = i.split('.')[1]
+            let tmpIndex = tmpStr.indexOf('/',9)
+            tmpUrl = tmpUrl + tmpStr.substring(0,tmpIndex) + '.tcb.qcloud.la' + tmpStr.substring(tmpIndex, tmpStr.length) + '.png'
+            this.imgTransObj[obj] = tmpUrl
+          }
+        }
+        else {
+          let tmpUrl = 'https://'
+          let tmpStr = this.imgTransObj[obj].split('.')[1]
+          let tmpIndex = tmpStr.indexOf('/',9)
+          tmpUrl = tmpUrl + tmpStr.substring(0,tmpIndex) + '.tcb.qcloud.la' + tmpStr.substring(tmpIndex, tmpStr.length) + '.png'
+          this.imgTransObj[obj] = tmpUrl
+        }
+      }
+      console.log(this.imgTransObj)
+    },
+    onClose() {
+      this.visible = false;
+      this.drawerData = null;
+    },
+  handleTableChange(pagination) {
       const pager = { ...this.pagination };
       pager.current = pagination.current;
       this.pagination = pager;
       this.fetch({
-        results: pagination.pageSize,
-        page: pagination.current,
-        ...filters,
+        pageSize: pagination.pageSize,
+        current: pagination.current,
       });
     },
     fetch(params = {}) {
-      console.log(params)
-      if (params.tags) {
-        console.log('有')
-      }
-      else {
-        console.log('无')
-      }
       this.loading = true;
       personManageModel.getPersonList({
         role: 0,
         operate: 0,
-        results: 10,
+        pageSize: 10,
+        current: 1,
         ...params,
       })
       .then(res => {
         const pagination = { ...this.pagination };
-        console.log(res)
-        // Read total count from server
-        // pagination.total = data.totalCount;
-        pagination.total = 200;
-        this.loading = false;
-        this.data = data.results;
-        this.pagination = pagination;
+        if (res.result.success) {
+          // Read total count from server
+          pagination.total = res.result.data.total;
+          this.loading = false;
+          let dataList = [];
+          // 参数处理
+          res.result.data.data.map((obj, index) => {
+            let tmp = {
+              key: obj._id,
+              name: obj.cardInfo.shopName,
+              phone: obj._id,
+              tags: obj.checked? ["已审核"] : ["未审核"],
+              orginalObj: obj
+            }
+            dataList.push(tmp)
+          })
+          this.data = dataList;
+        }
+        else {
+          this.loading = false;
+          this.$message.error('查询失败');
+        }
       })
-      // queryData({ // Send request
-      //   results: 10,
-      //   ...params,
-      // }).then(({ data }) => {
-      //   const pagination = { ...this.pagination };
-      //   // Read total count from server
-      //   // pagination.total = data.totalCount;
-      //   pagination.total = 200;
-      //   this.loading = false;
-      //   this.data = data.results;
-      //   this.pagination = pagination;
-      // });
-    }
+    },
+    // 操作栏
+    confirm(record) {
+      this.loading = true;
+      personManageModel.approve({
+        id: record.orginalObj._id,
+        role: 0,// 0商家 1骑手
+        checked: record.orginalObj.checked
+      })
+      .then(res => {
+        if (res.result.success) {
+          this.loading = false;
+          this.fetch({});
+          this.$message.success('操作成功');
+        }
+        else {
+          this.loading = false;
+          this.$message.error('操作失败');
+        }
+      })
+    },
+    cancel(e) {
+    },
 }
 }
 

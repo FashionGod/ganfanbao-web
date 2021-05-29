@@ -13,49 +13,67 @@ exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   try {
     if (event.role == 0) { // 0商家 1骑手 2平台
-      let merchantCountResult = await db.collection('merchantSignUpInfoCollection').count()
-      if (event.operate == 0) {
-        if (event.tags && event.tags.length>0) {
-          return db.collection('merchantSignUpInfoCollection').where({
-            checked: event.tag[0] == 0? true : false
+      let CountResult = await db.collection('merchantSignUpInfoCollection').count()
+      if (event.operate == 0) { // 0查询 1审核
+        return db.collection('merchantSignUpInfoCollection')
+        .skip((event.current-1)*event.pageSize)
+        .limit(event.pageSize)
+        .get()
+        .then(res => {
+            return handleSuccess({
+              data: res.data,
+              total: CountResult.total
+            })
           })
-          .skip((event.current-1)*event.pageSize)
-          .limit(event.pageSize)
-          .get()
+          .catch(err => {
+            return handleErr(err)
+          })
+      } else if (event.operate == 1) {// 更改审核状态
+        return db.collection('merchantSignUpInfoCollection')
+          .doc(event.id)
+          .update({
+            data:{
+              checked: event.checked?false:true
+            }
+          })
           .then(res => {
-              return handleSuccess(res.data)
+              return handleSuccess(res)
             })
             .catch(err => {
               return handleErr(err)
             })
-        }
-        else {
-          return db.collection('merchantSignUpInfoCollection')
-          .skip((event.current-1)*event.pageSize)
-          .limit(event.pageSize)
-          .get()
-          .then(res => {
-              return handleSuccess(res.data)
-            })
-            .catch(err => {
-              return handleErr(err)
-            })
-        }
-      } else if (event.operate == 1) {
-
       }
     } else if (event.role == 1) {
-      return db.collection('riderSignUpCollection').doc(event.id).update({
-          data: {
-            checked: true
-          }
-        })
-        .then(res => {
-          return handleSuccess(res.data)
-        })
-        .catch(err => {
-          return handleErr(err)
-        })
+      let CountResult = await db.collection('riderSignUpInfoCollection').count()
+        if (event.operate == 0) {
+          return db.collection('riderSignUpInfoCollection')
+          .skip((event.current-1)*event.pageSize)
+          .limit(event.pageSize)
+          .get()
+          .then(res => {
+              return handleSuccess({
+                data: res.data,
+                total: CountResult.total
+              })
+            })
+            .catch(err => {
+              return handleErr(err)
+            })
+        } else if (event.operate == 1) {// 更改审核状态
+          return db.collection('riderSignUpInfoCollection')
+            .doc(event.id)
+            .update({
+              data:{
+                checked: event.checked?false:true
+              }
+            })
+            .then(res => {
+                return handleSuccess(res)
+              })
+              .catch(err => {
+                return handleErr(err)
+              })
+        }
     }
   } catch (err) {
     return handleErr(err)
